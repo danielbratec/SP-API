@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SP-API Example</title>
+<script>
+async function callSPAPI() {
+  const endpoint = "YOUR_SP_API_ENDPOINT"; // Replace with your actual endpoint
+  const accessToken = "YOUR_ACCESS_TOKEN"; // Replace with your access token
+  const marketplaceId = "YOUR_MARKETPLACE_ID"; // Replace with your marketplace ID
+  const region = "YOUR_REGION"; //e.g., us-east-1, eu-west-1, etc.
+  const method = "GET"; // or POST, PUT, DELETE, etc.
+  const payload = null; // or an object for POST/PUT requests
+
+  try {
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "x-amz-access-token": accessToken, //For some services, this is required.
+        "x-amz-date": new Date().toISOString().replace(/\.\d+Z$/, 'Z'), // Important for signing.
+        "x-amz-security-token": "YOUR_SECURITY_TOKEN", //If you use temporary security credentials
+        "x-amz-target": "Target_Operation", //If you are using AWS services and target is required.
+        "content-type": "application/json",
+        "host": new URL(endpoint).hostname,
+        "user-agent": "YourAppName/1.0 (Language=JavaScript)", //Important for identifying your application.
+        "Marketplace-Id": marketplaceId,
+        "Region": region,
+      },
+      body: payload ? JSON.stringify(payload) : null,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("SP-API Error:", errorData);
+      document.getElementById("response").textContent = JSON.stringify(errorData, null, 2);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("SP-API Response:", data);
+    document.getElementById("response").textContent = JSON.stringify(data, null, 2);
+
+  } catch (error) {
+    console.error("Error:", error);
+    document.getElementById("response").textContent = "Error: " + error.message;
+  }
+}
+
+function generatePresignedURL(){
+    //Example for generating a presigned URL. This is needed for uploading documents or similar actions.
+    const endpoint = "YOUR_PRESIGNED_URL_ENDPOINT"; //Replace with your presigned URL endpoint.
+    const accessToken = "YOUR_ACCESS_TOKEN";
+    const marketplaceId = "YOUR_MARKETPLACE_ID";
+    const region = "YOUR_REGION";
+    const method = "GET";
+
+    fetch(endpoint, {
+      method: method,
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "x-amz-access-token": accessToken,
+        "x-amz-date": new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
+        "x-amz-security-token": "YOUR_SECURITY_TOKEN",
+        "content-type": "application/json",
+        "host": new URL(endpoint).hostname,
+        "user-agent": "YourAppName/1.0 (Language=JavaScript)",
+        "Marketplace-Id": marketplaceId,
+        "Region": region,
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Presigned URL:", data);
+        document.getElementById("presignedUrl").textContent = JSON.stringify(data, null, 2);
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        document.getElementById("presignedUrl").textContent = "Error: " + error.message;
+    });
+}
+</script>
+</head>
+<body>
+  <h1>SP-API Example</h1>
+  <button onclick="callSPAPI()">Call SP-API</button>
+  <pre id="response">Response will appear here.</pre>
+
+  <h1>Presigned URL Example</h1>
+  <button onclick="generatePresignedURL()">Get Presigned URL</button>
+  <pre id="presignedUrl">Presigned URL will appear here.</pre>
+</body>
+</html>
